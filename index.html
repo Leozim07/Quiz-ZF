@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz de Conhecimento</title>
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:#eeeeee;
+    color:#222;
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:40px 16px;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; transition-duration:0.001ms !important;}
+  }
+
+  .wrap{
+    width:100%;
+    max-width:480px;
+  }
+
+  .card{
+    background:#ffffff;
+    border-radius:24px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.08);
+    padding:36px 28px 32px;
+  }
+
+  .title{
+    font-size:32px;
+    font-weight:800;
+    text-align:center;
+    color:#1a1a1a;
+    line-height:1.25;
+    margin:0 0 26px;
+  }
+
+  .q-text{
+    font-size:19px;
+    font-weight:500;
+    line-height:1.45;
+    text-align:center;
+    color:#444;
+    margin:0 0 28px;
+  }
+
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .opt{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:#4f93e0;
+    border:none;
+    border-radius:12px;
+    padding:16px 18px;
+    color:#ffffff;
+    font-family:inherit;
+    font-size:15.5px;
+    font-weight:500;
+    line-height:1.4;
+    cursor:pointer;
+    transition:filter 0.15s ease, transform 0.08s ease;
+  }
+  .opt:hover:not(:disabled){ filter:brightness(1.05); }
+  .opt:active:not(:disabled){ transform:scale(0.99); }
+  .opt:focus-visible{ outline:2px solid #1a1a1a; outline-offset:2px; }
+  .opt:disabled{ cursor:default; }
+  .opt.correct{ background:#5cb87a; }
+  .opt.wrong{ background:#e06070; }
+
+  .feedback-line{
+    margin-top:22px;
+    min-height:24px;
+    font-size:17px;
+    font-weight:700;
+    text-align:center;
+  }
+  .feedback-line.ok{ color:#3d9a5c; }
+  .feedback-line.err{ color:#d8394c; }
+
+  .next-btn{
+    display:block;
+    margin:18px auto 0;
+    font-weight:600;
+    font-size:15px;
+    color:#fff;
+    background:#6b7280;
+    border:none;
+    border-radius:12px;
+    padding:14px 28px;
+    cursor:pointer;
+    transition:background 0.15s ease;
+  }
+  .next-btn:hover{ background:#565d66; }
+
+  .start-btn, .restart-btn{
+    display:block;
+    margin:8px auto 0;
+    font-weight:700;
+    font-size:16px;
+    color:#fff;
+    background:#4f93e0;
+    border:none;
+    border-radius:12px;
+    padding:15px 30px;
+    cursor:pointer;
+    transition:filter 0.15s ease;
+  }
+  .start-btn:hover, .restart-btn:hover{ filter:brightness(1.05); }
+
+  .center-text{
+    text-align:center;
+    color:#666;
+    font-size:15px;
+    margin:0 0 22px;
+  }
+
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+
+    <div id="startCard">
+      <h1 class="title">Quiz de<br>Conhecimento</h1>
+      <p class="center-text">140 perguntas em ordem aleatória.</p>
+      <button class="start-btn" id="startBtn">Começar Quiz</button>
+    </div>
+
+    <div id="quizCard" class="hidden">
+      <h1 class="title">Quiz de<br>Conhecimento</h1>
+      <p class="q-text" id="qText">Carregando...</p>
+      <div class="options" id="qOptions"></div>
+      <p class="feedback-line" id="feedback"></p>
+      <button class="next-btn hidden" id="nextBtn">Próxima Questão</button>
+    </div>
+
+    <div id="resultCard" class="hidden">
+      <h1 class="title">Quiz<br>Concluído</h1>
+      <p class="center-text">Você respondeu todas as perguntas.</p>
+      <button class="restart-btn" id="restartBtn">Refazer em Nova Ordem</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const RAW_QUESTIONS = [{"q": "Qual a finalidade do uso do aquecedor indutivo no processo de tratamento térmico?", "options": ["Dilatar a peça, facilitando sua montagem.", "Aumento da dureza superficial da peça e resistência ao desgaste.", "Contrair a peça, facilitando sua montagem.", "Todas estão corretas."], "correct": 1}, {"q": "Onde estão disponíveis as Diretivas (Exemplo: D SRC2-17-06 – Controle de Produção)?", "options": ["Outlook.", "Skype.", "Gestão de Diretivas.", "SAP."], "correct": 2}, {"q": "Quando deve ser utilizado o cartão de interditado?", "options": ["Para identificar peças não conformes ou suspeitas.", "Para entregar as peças no final do turno.", "Para identificar peças com tratamento térmico.", "Para identificar as peças faltando operação."], "correct": 0}, {"q": "O que é uma intervenção realizada em uma máquina ou equipamento após a detecção de uma falha?", "options": ["Manutenção Planejada.", "Manutenção Preditiva.", "Manutenção Preventiva.", "Manutenção Corretiva."], "correct": 3}, {"q": "O que é necessário estar no posto de trabalho para que este seja considerado “ok” durante uma auditoria?", "options": ["Um colaborador executando seu trabalho.", "Os meios de medição e inspeção contidos no roteiro, instrução de trabalho, plano de controle e desenho.", "Os meios de medição e inspeção especificados em desenho.", "Os meios de medição e inspeção similares ao do roteiro."], "correct": 1}, {"q": "O que é uma intervenção sistemática realizada planejadamente, em períodos determinados, por meio de um plano de manutenção e um cronograma orientativo anual?", "options": ["Manutenção Preventiva.", "Manutenção Corretiva.", "Manutenção Preditiva.", "Todas estão corretas."], "correct": 0}, {"q": "Onde deve-se armazenar peças não-conformes?", "options": ["No posto de trabalho sem necessidade de identificação.", "Em uma caixa de madeira no posto de trabalho.", "Nos locais pré-definidos de segregação previstos para este fim (área de segregação).", "Em uma caixa de papelão no corredor."], "correct": 2}, {"q": "O que é Picking List?", "options": ["É um sistema eletrônico que verifica a posição das peças no estoque.", "É um sistema informatizado para indicar o controle de processo no abastecimento de linha.", "É um sistema informatizado para indicar as peças que não deverão ser montadas.", "Lista de materiais e quantidades necessárias para atender a ordem de produção ou entrega."], "correct": 3}, {"q": "Conforme IATF 16949, item 8.5.4.1 (Preservação – suplemento), a organização deve usar um sistema de gestão de inventário para otimizar o giro do estoque ao longo do tempo e assegurar a rotação do estoque, isto é:", "options": ["Avaliar em intervalos planejados apropriados a condição do produto no giro do estoque.", "Assegurar a preservação, embalagem, expedição e rotulagem, como providos pelos clientes.", "Assegurar a identificação, armazenamento e manuseio, desde a expedição até a entrega/aceitação pelo cliente.", "Utilizar a metodologia FIFO (Primeiro que entra – primeiro que sai)."], "correct": 3}, {"q": "Conforme descrito no Plano de Controle quando a frequência solicita, por exemplo, enviar 1 peça para ensaio metalúrgico, isso significa que:", "options": ["Deve-se enviar como Ajuste de Máquina.", "Deve-se enviar como variação de processo.", "Deve-se enviar como Periódico/Setup.", "Deve-se enviar como Experiência."], "correct": 2}, {"q": "Conforme definição da documentação IT-VE-001 utilizada para características especiais, a simbologia “C” significa:", "options": ["Pode continuar o processo.", "Pode afetar segurança.", "Pode afetar a função.", "Nenhuma das anteriores."], "correct": 1}, {"q": "Conforme definição da documentação IT-VE-001 utilizada para características especiais, a simbologia “F” significa:", "options": ["Pode afetar a função.", "Pode afetar o processo.", "Pode afetar a segurança.", "Nenhuma das anteriores."], "correct": 0}, {"q": "Quando o PPAP é realizado?", "options": ["Quando temos problemas de qualidade no produto.", "Quando cliente solicita ou o fornecedor deseja fazê-lo.", "Quando a máquina não tem capabilidade.", "Quando o produto está em processo de aprovação para fornecimento ao cliente."], "correct": 3}, {"q": "Ferramenta da qualidade conhecida como diagrama de causa e efeito ou “espinha de peixe”:", "options": ["Diagrama de Pareto.", "Histograma.", "Diagrama de Ishikawa.", "Fluxograma."], "correct": 2}, {"q": "Alguns fatores podem nos levar à uma leitura equivocada nas medições analógicas, como por exemplo:", "options": ["Parafuso de fixação travado.", "Erro de paralaxe.", "Não existem erros para este caso.", "Utilizar micrometro decimal quando é solicitado centesimal."], "correct": 1}, {"q": "Quando detectamos cestos ou separadores danificados, devemos:", "options": ["Interditar o cesto ou separadores e solicitar outro para logística.", "Continuar trabalhando normalmente.", "Alojar as peças com cuidado.", "Solicitar outro cesto e empilhar as peças."], "correct": 0}, {"q": "Conforme D SRC2 17 02, quando detectamos produtos vencidos (ex: graxa), devemos:", "options": ["Interditar e informar o time de qualidade.", "Descartar e solicitar novo produto.", "Utilizar e avisar o superior.", "Solicitar novo produto apenas após acabar o vencido."], "correct": 0}, {"q": "Quando temos produtos semelhantes próximos nas prateleiras, devemos:", "options": ["Analisar criticamente e verificar se são intercambiáveis.", "Solicitar a troca de posição de um dos produtos para evitar mistura.", "Avaliar se o material está embalado.", "Todas estão corretas."], "correct": 1}, {"q": "Quando realizamos a compra de peças com o sistema supermercado, devemos:", "options": ["Não utilizar o pick list.", "Coletar dois itens por compra.", "Coletar itens deixando as peças interditadas.", "Coletar os itens identificados pelo pick list, uma peça por compra."], "correct": 3}, {"q": "Conforme a diretiva DN BRA 17-23, a Ação Preventiva é:", "options": ["Ação para eliminar a causa de uma NC e prevenir recorrência.", "Ação para eliminar uma NC identificada.", "Ação para eliminar a causa de um potencial não conformidade ou outra situação potencialmente indesejável.", "Todas estão corretas."], "correct": 2}, {"q": "Em que momento o operacional deve-se consultar a documentação de processo?", "options": ["Somente no setup.", "Somente inspeção de processo.", "Em qualquer momento, os documentos são para suportar a processo.", "No final do lote."], "correct": 2}, {"q": "Conforme a diretiva DN BRA 17-23, a Ação Corretiva é:", "options": ["Ação para eliminar a causa de uma não conformidade para prevenir recorrência.", "Ação para eliminar uma não conformidade identificada.", "Ação para eliminar a causa de uma potencial NC.", "Todas estão corretas."], "correct": 0}, {"q": "Qual o objetivo da Ação de Contenção?", "options": ["Eliminar a causa de um potencial NC.", "Eliminar uma não conformidade identificada.", "Eliminar a causa de uma NC e prevenir recorrência.", "Todas estão corretas."], "correct": 1}, {"q": "O critério de abertura de nota D2 para falhas internas é:", "options": ["100% das falhas detectadas entre áreas.", "100% das falhas na área que requerem contenção fora do posto.", "D2 não é requerido para falhas de setup/peça danificada.", "Todas estão corretas."], "correct": 3}, {"q": "Conforme o PO, Controle de Produto não-conforme é:", "options": ["Produto com situação suspeita não classificado como NC.", "Ação para tornar o produto conforme.", "Produto ou material que não estão conforme com seus requisitos ou especificações estabelecidas, deve ser identificado e controlado para prevenir seu uso ou entrega não pretendido.", "Todas estão corretas."], "correct": 2}, {"q": "Conforme definição da PO, Retrabalho é:", "options": ["Produto com situação não identificada.", "Ação sobre um produto ou serviço não conforme, a fim de torná-lo conforme aos requisitos. Re-inspeções deve ser considerada como retrabalho.", "Ação para impedir a utilização prevista originalmente.", "Todas estão corretas."], "correct": 1}, {"q": "Mudança provisória no processo produtivo (máquina, ferramental), o solicitante deve emitir:", "options": ["Uma nota D2.", "Um 5W2H.", "Um A3.", "Um Desvio de Processo."], "correct": 3}, {"q": "Qual o objetivo de se realizar o teste de Poka Yoke antes de iniciar o turno?", "options": ["Evitar apontamento em auditorias.", "Produzir peça NC e enviar ao cliente.", "Não produzir peça/produto não conforme e enviar ao cliente.", "Evitar apontamento em inspeção volante."], "correct": 2}, {"q": "Qual impacto de se utilizar o RG (Funcional) de outro colega na operação?", "options": ["Perder rastreabilidade.", "Medidas disciplinares.", "Violar código de conduta.", "Todas estão corretas."], "correct": 3}, {"q": "Atividades e passos do operador ao utilizar o Poka Yoke:", "options": ["Simular erro no início de cada turno.", "Parar processo em caso de anormalidade.", "Só voltar se o Poka Yoke estiver OK.", "Todas estão corretas."], "correct": 3}, {"q": "Consequências do envio de uma peça sem tratamento térmico:", "options": ["Risco de quebra, danos e acidente ao usuário final.", "Aumento da durabilidade.", "Melhora a condição de montagem.", "Nenhuma das anteriores."], "correct": 0}, {"q": "Antes de iniciar a produção (Setup), o que deve ser feito?", "options": ["Registrar liberação só se necessário.", "Realizar e registrar a liberação do processo – set-up, fazer apontamento de todas as características solicitada em relatório.", "Não fazer apontamentos dimensionais.", "Nenhuma das anteriores."], "correct": 1}, {"q": "Produto suspeito se define por:", "options": ["Produto com uma situação não identificada, o qual deve ser controlado como produto não conforme.", "Produto devolvido para embalagem e fluxo normal.", "Produto que não está conforme.", "Todas estão incorretas."], "correct": 0}, {"q": "Onde podemos aplicar o Poka Yoke?", "options": ["Só para peças metálicas.", "Só divergência dimensional.", "Em operações onde existem peças semelhantes e em grande quantidade.", "Todas estão incorretas."], "correct": 2}, {"q": "Por que os 8D’s devem ser desenvolvidos por um time multifuncional?", "options": ["Mostrar participação ao cliente.", "Garantir participação de todas as áreas uma vez.", "Garantir os 8 passos.", "Porque precisamos garantir a resolução da causa raiz com as maiores eficiências e eficácias possíveis."], "correct": 3}, {"q": "Para regiões usinadas não pintadas nos agregados:", "options": ["Passar óleo protetivo.", "Passar solvente.", "Não é necessária limpeza.", "Verificar roscas."], "correct": 0}, {"q": "Principais contaminantes que afetam a graxa:", "options": ["Outro lubrificante.", "Água e sujidade.", "Particulados de metais.", "Todas estão corretas."], "correct": 3}, {"q": "Como detectar falha de usinagem ou falta de operação?", "options": ["Salt spray.", "Realizando inspeção visual 100% em todos os produtos antes de entregarmos ao próximo processo.", "Laminação.", "Inspeção visual só no Tratamento Térmico."], "correct": 1}, {"q": "Importância da instrução de trabalho (IT):", "options": ["Modo correto de execução.", "Unifica conhecimento e aumenta segurança.", "Passo a passo detalhado.", "Todas estão corretas."], "correct": 3}, {"q": "O que fazer quando derrubar ou bater uma peça?", "options": ["Colocar de volta no rack.", "Identificar e segregar a peça, acionar o Monitor de Equipe ou a área da Qualidade.", "Retrabalhar sem avisar.", "Deixar para o próximo turno."], "correct": 1}, {"q": "Uma batida na esfera e rosca causa:", "options": ["Sérios transtornos na linha de montagem e em nossos clientes.", "Engate e problemas ambientais.", "Nenhum dano.", "Porosidade."], "correct": 0}, {"q": "Como deve ser a ação de contenção para produto NC?", "options": ["Checar setor e estoque.", "Verificar tratamento térmico e montagem.", "Estender a outros processos e expedição.", "Todas estão corretas."], "correct": 3}, {"q": "Caso o Poka Yoke esteja reprovado:", "options": ["Aviso o responsável e sigo a produção.", "Abro OS e continuo trabalhando.", "Paro imediatamente até que ações sejam tomadas e realizo o registro em check list.", "Desligo o Poka Yoke."], "correct": 2}, {"q": "Princípios do DNA da Qualidade ZF:", "options": ["Pessoas, Princípios, Percepção, Produção, PDCA.", "Percepção, Prevenção, Performance, Produtividade, PDCA.", "Pessoas, Prevenção, Percepção, Performance, PDCA.", "Pessoas, Princípios, Produto, PDCA, Processo."], "correct": 2}, {"q": "Princípio Pessoas:", "options": ["Estrutura do DNA.", "Atuar no desenvolvimento dos colaboradores com foco em competência e cultura da qualidade.", "Analisar dados para decisão.", "Entender expectativas de clientes."], "correct": 1}, {"q": "Princípio Prevenção:", "options": ["Analisar dados.", "Assegurar o planejamento dos produtos, processos e serviços da ZF com foco no defeito zero.", "Desenvolvimento de colaboradores.", "Entender expectativas."], "correct": 1}, {"q": "Princípio Percepção:", "options": ["Entender a atender as expectativas dos clientes internos e externos.", "Focar em indicadores.", "Desenvolvimento de colaboradores.", "Lançamento robusto."], "correct": 0}, {"q": "Princípio Performance:", "options": ["Lançamento robusto.", "Desenvolvimento de colaboradores.", "Focar na definição e monitoramento dos indicadores da ZF, avaliando o desempenho, rumo à excelência em Qualidade.", "Entender expectativas."], "correct": 2}, {"q": "Princípio PDCA:", "options": ["A estrutura do DNA da Qualidade, trazendo a reflexão das lições aprendidas e o compartilhamento de boas práticas.", "Analisar dados.", "Planejamento com foco em defeito zero.", "Entender expectativas."], "correct": 0}, {"q": "Peças de setup reprovadas devem ser identificadas com:", "options": ["Cinta branca para retrabalho.", "Caixa de segregação ou Cinta plástica vermelha quando não for possível, devido ao tamanho das peças.", "Cinta vermelha sem re-inspeção.", "Cinta branca no fim do turno."], "correct": 1}, {"q": "O almoxarife deve verificar contaminação nas peças incluindo:", "options": ["Oxidação.", "Poeira.", "Óleo/graxa que interfira na qualidade.", "Todas estão corretas."], "correct": 3}, {"q": "Almoxarife deve armazenar peças em:", "options": ["Caçambas com madeira.", "Caixas KLT sujas.", "Recipientes limpos, livre de qualquer contaminante.", "Caçambas com água."], "correct": 2}, {"q": "Shutdown são paradas superiores a:", "options": ["10 dias úteis.", "10 dias corridos.", "12 dias corridos.", "12 dias úteis."], "correct": 1}, {"q": "Quality Alert auxilia na:", "options": ["Contenção / Prevenção de falhas internas e externas, de acordo com a complexidade da falha.", "Prevenção só interna.", "Prevenção só externa."], "correct": 0}, {"q": "No Shutdown, a Produção deve:", "options": ["Cobrir carrinhos e racks.", "Cobrir racks de componentes.", "Desligar equipamentos (salvo fornos).", "Todas estão corretas."], "correct": 3}, {"q": "Após Shutdown, é necessário:", "options": ["Validar Poka Yokes.", "Revalidar setups.", "Religar conforme prioridade.", "Todas estão corretas."], "correct": 3}, {"q": "Responsabilidade do usuário sobre meios de medição:", "options": ["Validade vencida.", "Falta de identificação.", "Mau funcionamento.", "Todas estão corretas."], "correct": 3}, {"q": "Poka Yoke identifica:", "options": ["Falta de operação.", "Peça montada errada.", "Peça não montada.", "Todas estão corretas."], "correct": 3}, {"q": "Principais casos de emissão de desvio:", "options": ["Fluxo do processo.", "Mudança de máquina.", "Poka Yoke.", "Todas estão corretas."], "correct": 3}, {"q": "Quando deve ser realizado o retrabalho (IT-GQ-007)?", "options": ["No momento do processo.", "Não precisa.", "Liberar para o cliente.", "Retornar o produto à linha para realizar seu retrabalho no fim do lote de processo."], "correct": 3}, {"q": "Preservação do produto (IATF) inclui:", "options": ["Identificação e manuseio.", "Armazenamento e embalagem.", "Transporte e proteção.", "Todas estão corretas."], "correct": 3}, {"q": "Ao detectar itens oxidados ou sujos:", "options": ["Identificar, segregar as peças e avisar aos responsáveis para avaliação.", "Seguir fluxo normal.", "Deixar para o próximo turno."], "correct": 0}, {"q": "Mais importante na Gestão da Qualidade:", "options": ["Foco na produção.", "Foco no cliente.", "Foco na venda.", "Certificado ISO."], "correct": 1}, {"q": "Conceito de Indústria 4.0:", "options": ["Aumento da produção.", "Foco na Qualidade.", "É uma combinação de inovações, tecnologias digitais e automatização dos processos.", "Globalização comercial."], "correct": 2}, {"q": "O que é SMED?", "options": ["Manutenção integral.", "São técnicas e esforços visando a diminuição do tempo de setup.", "Ambiente limpo (Lean).", "Estudo de tempos."], "correct": 1}, {"q": "Qual NÃO faz parte dos 7 desperdícios Lean?", "options": ["SMED.", "Espera.", "Estoques.", "Superprodução."], "correct": 0}, {"q": "Pontos de inspeção 100% imediatos após NC oficializada pelo cliente:", "options": ["Firewall e fornecedor.", "Recebimento e linha.", "Ação de Contenção Interina (ICA) e Firewall.", "Fornecedor e linha."], "correct": 2}, {"q": "Qual NÃO é um princípio do ZF Production System?", "options": ["Antecipação e Diversidade.", "Inovação e melhoria contínua.", "Orientação cliente-fornecedor.", "Padronização e Flexibilidade."], "correct": 0}, {"q": "Qual NÃO faz parte do ZF Way?", "options": ["Responsabilidade e Empoderamento.", "Pessoas e Performance.", "Paixão e Diversidade.", "Antecipação e Diversidade."], "correct": 1}, {"q": "5 Princípios do 5’S:", "options": ["Organização, utilização, padronização, limpeza, disciplina.", "Padronização, organização, utilização, disciplina, limpeza.", "Utilização, organização, limpeza, padronização, disciplina.", "Limpeza, utilização, organização, disciplina, padronização."], "correct": 2}, {"q": "PPAC trata de problemas de:", "options": ["Informação digital.", "Proteção de dados.", "Segurança do produto.", "Patrimônio."], "correct": 2}, {"q": "Aspecto e impacto ambiental correto:", "options": ["Vazamento de produto químico – contaminação do solo/água.", "Resíduos – ar.", "Gases – solo.", "Energia – solo."], "correct": 0}, {"q": "Resumo de ergonomia:", "options": ["Adaptação do trabalho ao homem.", "Postura no posto.", "Trabalho sem dor.", "Sem movimentos repetitivos."], "correct": 0}, {"q": "Ramal de emergência SRC2:", "options": ["2333.", "7066.", "2335.", "Portaria."], "correct": 1}, {"q": "O que fazer em emergências?", "options": ["Correr sem aviso.", "Remover a vítima.", "Acionar o ramal de emergência, aguardar suporte e orientações.", "Nada."], "correct": 2}, {"q": "Primeiro passo para trabalhos de risco (altura, confinado):", "options": ["Comunicar colega.", "Acionar o técnico de segurança antes do início das atividades.", "Iniciar e depois avisar.", "Só iniciar."], "correct": 1}, {"q": "Regra do colete refletivo:", "options": ["O colete deve ser utilizado em áreas de movimentação logística.", "Não necessário.", "Em todos os locais.", "Todas corretas."], "correct": 0}, {"q": "EPI’s básicos para produção (pegada amarela):", "options": ["Óculos e luva.", "Óculos de segurança, protetor auricular e sapato de segurança.", "Auricular e creme.", "Nenhuma anterior."], "correct": 1}, {"q": "Atendimento à Política Ambiental Corporativa:", "options": ["Só requisitos legais.", "Aumento de químicos.", "Utilização responsável dos recursos naturais economia de água, energia, matéria prima).", "Maximizar impacto."], "correct": 2}, {"q": "Incorreta sobre o programa LOTO:", "options": ["O objetivo principal do programa Loto é instruir os colaboradores para não tomarem choque elétrico.", "5 passos de bloqueio.", "Bloqueio de fontes de energia.", "Cores dos cadeados."], "correct": 0}, {"q": "Sobre o ciclo PDCA:", "options": ["Produzir, Detectar, Conferir, Aguardar.", "É uma abordagem da gestão da qualidade que significa Planejar, Fazer, Verificar e Agir.", "Foco diferente de melhoria contínua.", "Alta administração."], "correct": 1}, {"q": "Ferramenta para variações de dados:", "options": ["Histograma.", "Ishikawa.", "Carta de Controle.", "Fluxograma."], "correct": 2}, {"q": "Fundamento atual da qualidade:", "options": ["Responsabilidade de área específica.", "Lucro prioritário.", "Estar em conformidade com as expectativas do cliente.", "Padrão definido pelo gerente."], "correct": 2}, {"q": "Motivo do Controle de Qualidade industrial:", "options": ["Exigências legais.", "Redução de custos.", "Exigências internacionais.", "Produção uniforme, com qualidade garantida."], "correct": 3}, {"q": "5 passos do plano de reação:", "options": ["Ignorar pequenas variações.", "Registrar a NC; Verificar peças produzidas a partir da última medição e subsequentes; Segregar e identificar as peças produzidas; Providenciar correção do processo e controlar a 1ª peça; Persistindo a NC informar o superior da área.", "Descartar sem registrar.", "Aguardar o fim do turno para agir."], "correct": 1}, {"q": "Documento de material interditado:", "options": ["IO-GQ-001.", "IT-GQ-003.", "IT-GQ-007.", "IO-GQ-002."], "correct": 3}, {"q": "Gráfico de barras de distribuição de frequência:", "options": ["Histograma.", "Ishikawa.", "Carta de Controle.", "Fluxograma."], "correct": 0}, {"q": "Definição de Auditoria:", "options": ["Processo por auditor sem entendimento técnico.", "Um processo sistemático, independente e documentado para verificar a conformidade com os padrões através da revisão de evidência objetiva.", "Processo sistêmico não documentado.", "Processo informal sem critérios."], "correct": 1}, {"q": "Consequências do não atendimento aos requisitos:", "options": ["Perda financeira sem risco à empresa.", "Ganho de reputação.", "Perda financeira, perda de reputação e em casos extremos coloca em risco a existência da empresa.", "Nenhuma consequência relevante."], "correct": 2}, {"q": "Interdependência na segurança:", "options": ["Área cuida de si.", "Liderança responde por tudo.", "Todos se responsabilizam por si e pelos colegas.", "Só supervisores."], "correct": 2}, {"q": "Sirene de abandono e ramal de emergência:", "options": ["Contínua/longa - 3600.", "Intermitente - 4660.", "Contínua e longa - 7066.", "Contínua/longa - 6670."], "correct": 2}, {"q": "Uso de produto químico sem aprovação:", "options": ["Sim, lendo a FISPQ.", "Sim, se for teste.", "Não podem ser usados.", "Não, todo produto químico precisa ser avaliado e aprovado antes de ser colocado em teste."], "correct": 3}, {"q": "Representantes dos funcionários (ISO 45001):", "options": ["EHS.", "Brigada.", "Líderes.", "Equipe da CIPA."], "correct": 3}, {"q": "Corte com 2 pontos e retorno normal:", "options": ["Acidente sem afastamento.", "Acidente com afastamento.", "Incidente.", "Condição Insegura."], "correct": 0}, {"q": "Suporte pesado com possibilidade de cair:", "options": ["Condição Insegura.", "Near Miss.", "Ambulatorial.", "Acidente com afastamento."], "correct": 0}, {"q": "Resíduos no coletor azul:", "options": ["Latas e revistas.", "Pilhas.", "Caixas de papelão e folhas sulfite.", "Tampas e pilhas."], "correct": 2}, {"q": "Principal objetivo da IATF 16949:", "options": ["Redução de custos.", "Segurança do produto final.", "Assegurar conformidade com requisitos de clientes automotivos.", "Leis ambientais."], "correct": 2}, {"q": "Gestão de risco IATF:", "options": ["FMEA só novos projetos.", "SWOT estratégico.", "Pós-auditoria externa.", "Avaliação de riscos no contexto do negócio."], "correct": 3}, {"q": "Exigência IATF para NC:", "options": ["Determinação da causa raiz e implementação de ações corretivas.", "Correção só se houver impacto financeiro.", "Sem análise de causa.", "Correção imediata."], "correct": 0}, {"q": "Rastreabilidade IATF:", "options": ["Só de NC.", "Rastreabilidade completa de componentes críticos.", "Só armazenamento.", "Amostragem."], "correct": 1}, {"q": "PPAP (IATF) é:", "options": ["Plano de produção.", "Processo de aprovação de peças de produção.", "Protocolo de auditoria.", "Plano preventivo."], "correct": 1}, {"q": "Responsabilidade da alta direção (IATF):", "options": ["Orçamento.", "Delegação operacional.", "Demonstra liderança e comprometimento com o SGQ.", "Auditorias externas."], "correct": 2}, {"q": "Infraestrutura IATF:", "options": ["Sem manutenção aceita.", "Infraestrutura deve suportar conformidade do produto.", "Não aborda.", "Só TI."], "correct": 1}, {"q": "Ambiente para operação de processos:", "options": ["Virtual.", "Limpeza, organização e controle ambiental adequados.", "Simulações digitais.", "Temperatura em escritórios."], "correct": 1}, {"q": "Conhecimento organizacional:", "options": ["Informal.", "Deve ser registrado, mantido e disponibilizado conforme necessário.", "Verbal.", "Só alta direção."], "correct": 1}, {"q": "Competência de pessoal:", "options": ["Segurança patrimonial.", "Formação mínima técnica.", "Determinar competência, fornecer treinamento e avaliar eficácia.", "Só qualidade."], "correct": 2}, {"q": "Comunicação interna (IATF):", "options": ["Vídeo.", "Voluntária.", "Deve ser definida, eficaz e apropriada.", "Boletins murais."], "correct": 2}, {"q": "Planejamento da produção:", "options": ["Mensal.", "Planejamento deve prever recursos e critérios de aceitação.", "Estoque mínimo.", "Ordens verbais."], "correct": 1}, {"q": "Controle de mudanças:", "options": ["Sem aprovação.", "Devem ser planejadas e autorizadas com avaliação de riscos.", "Sem documentação.", "Só layout."], "correct": 1}, {"q": "Calibração de instrumentos:", "options": ["Só eletrônicos.", "Só no recebimento.", "Calibração periódica com rastreabilidade a padrões reconhecidos.", "Visual."], "correct": 2}, {"q": "Desenvolvimento de fornecedores:", "options": ["Sem avaliação.", "Autoavaliação sem evidência.", "Redução.", "Monitoramento contínuo com ações de melhoria."], "correct": 3}, {"q": "Análise de dados:", "options": ["Auditorias externas.", "Amostras visuais.", "Uso de dados para identificar oportunidades de melhoria.", "Só falhas em série."], "correct": 2}, {"q": "Política da qualidade:", "options": ["Comunicada, entendida e aplicada por toda a organização.", "Só setor de qualidade.", "Gerente de produção.", "Pós-auditoria externa."], "correct": 0}, {"q": "Registros da qualidade:", "options": ["10 anos.", "Conforme cliente.", "Digital criptografado.", "Controle para garantir rastreabilidade e confiabilidade."], "correct": 3}, {"q": "Organização deve determinar:", "options": ["Número de auditorias.", "Competências necessárias para quem afeta a conformidade do produto.", "Uniforme.", "Férias."], "correct": 1}, {"q": "Análise crítica pela direção:", "options": ["Salários.", "Produtividade.", "Verificar eficácia do SGQ.", "Manutenções."], "correct": 2}, {"q": "Objetivos da qualidade:", "options": ["Terceirização.", "Sem relação com cliente.", "Auditor externo.", "Metas mensuráveis alinhadas à política da qualidade."], "correct": 3}, {"q": "Auditoria de segunda parte:", "options": ["Certificadoras.", "Direção.", "Auditoria em fornecedores.", "Não obrigatória."], "correct": 2}, {"q": "Requisitos específicos do cliente:", "options": ["Ambientais.", "Financeiros.", "Atender exigências adicionais do cliente automotivo.", "Cliente final."], "correct": 2}, {"q": "IATF vs ISO 9001:", "options": ["IATF substitui.", "ISO 9002 base.", "Concorrentes.", "IATF incorpora a ISO 9001."], "correct": 3}, {"q": "Controle de documentos:", "options": ["Identificação, controle e atualização.", "Acesso exclusivo qualidade.", "Impressão tripla.", "RH."], "correct": 0}, {"q": "Reação imediata ao cliente exigida em:", "options": ["Atendimento.", "Reclamação de problema de produto em campo.", "Logística reversa.", "Novo fornecedor."], "correct": 1}, {"q": "Cultura de segurança de excelência:", "options": ["EPIs obrigatórios.", "Reação rápida.", "Integração da segurança aos valores e decisões cotidianas da empresa.", "Auditorias trimestrais."], "correct": 2}, {"q": "Involvimento da alta direção (ISO 45001):", "options": ["Reuniões anuais.", "Assinatura SESMT.", "Liderança visível, tomada de decisões baseadas em riscos e apoio contínuo.", "Boletins periódicos."], "correct": 2}, {"q": "Principal causa de acidentes (DDS):", "options": ["Falta de treinamento formal.", "EPC incorreto.", "Comportamentos de risco que não são devidamente identificados e tratados.", "Desconhecimento da lei."], "correct": 2}, {"q": "Papel do trabalhador na gestão de riscos:", "options": ["Cumprir sem questionar.", "Sugerir pós-incidente.", "Assinar relatórios.", "Participar ativamente na identificação de perigos e proposição de melhorias."], "correct": 3}, {"q": "Pirâmide de Heinrich:", "options": ["Falha de máquinas causa fatais.", "A redução de incidentes menores e quase acidentes previne eventos graves.", "Foco em afastamento.", "Imprevisíveis."], "correct": 1}, {"q": "Comportamento inseguro identificado quando:", "options": ["Improviso temporário.", "Há uma repetição inconsciente de ações que ignoram normas preventivas.", "Baixa supervisão.", "Risco para produtividade."], "correct": 1}, {"q": "Cultura proativa se diferencia por:", "options": ["Tecnologia automatizada.", "Penalizações.", "Antecipação e eliminação de riscos com envolvimento coletivo.", "Regras rígidas."], "correct": 2}, {"q": "Cultura de segurança reativa:", "options": ["Melhorias pré-acidente.", "Atuar somente após a ocorrência de eventos indesejados.", "Treinamentos regulares.", "Indicadores diários."], "correct": 1}, {"q": "Fortalecer cultura de segurança:", "options": ["Metas punitivas.", "Hierarquia.", "Relatórios escritos.", "Promover diálogos abertos sobre riscos e aprendizados."], "correct": 3}, {"q": "Indicador de maturidade:", "options": ["Participação ativa dos colaboradores em ações preventivas.", "Redução de inspeção.", "Volume para CIPA.", "Quantidade de EPI."], "correct": 0}, {"q": "ISO 45001 - Melhoria contínua:", "options": ["Avaliação individual.", "Ciclo PDCA aplicado à gestão de riscos e oportunidades.", "Fiscalização terceirizada.", "Controles administrativos."], "correct": 1}, {"q": "Falha de comportamento inseguro (DDS):", "options": ["Advertência.", "Afastamento.", "Com análise da causa raiz e aprendizado coletivo.", "Novo manual."], "correct": 2}, {"q": "Atitude em cultura madura:", "options": ["Tolerância zero.", "Compartilhamento espontâneo de quase acidentes.", "Riscos legais.", "Mais treinamentos."], "correct": 1}, {"q": "Prioridade ISO 45001:", "options": ["Conformidade legal.", "Produtividade.", "Inspeção visual.", "Eliminação dos perigos na fonte, quando possível."], "correct": 3}, {"q": "Desvio de segurança:", "options": ["Ignorar se sem dano.", "Tratar após reincidência.", "Registrado, analisado e comunicado.", "Informal."], "correct": 2}, {"q": "Conceito “zero acidentes”:", "options": ["Reflete o compromisso com prevenção total e disciplina operacional.", "Motivação.", "Utópico.", "Alto risco."], "correct": 0}, {"q": "Feedback na segurança:", "options": ["Erros em público.", "Reforçar condutas seguras de forma imediata e respeitosa.", "Cobrança.", "Padronizar reações."], "correct": 1}, {"q": "Plano de ação pós quase acidente:", "options": ["Punição.", "Cancelar tarefa.", "Investigação da causa, compartilhamento de aprendizados e controle dos riscos.", "Nova norma."], "correct": 2}]
+;
+
+// Time (ms) the answer stays highlighted before auto-advancing.
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function buildDeck(){
+  const order = shuffle(RAW_QUESTIONS.map((_,i)=>i));
+  return order.map(i=>{
+    const src = RAW_QUESTIONS[i];
+    const idxs = shuffle(src.options.map((_,k)=>k));
+    const options = idxs.map(k=>src.options[k]);
+    const correct = idxs.indexOf(src.correct);
+    return { num: i + 1, q: src.q, options, correct };
+  });
+}
+
+let deck = buildDeck();
+let pos = 0;
+let locked = false;
+
+const qText = document.getElementById('qText');
+const qOptions = document.getElementById('qOptions');
+const feedback = document.getElementById('feedback');
+const nextBtn = document.getElementById('nextBtn');
+const quizCard = document.getElementById('quizCard');
+const resultCard = document.getElementById('resultCard');
+const restartBtn = document.getElementById('restartBtn');
+const startCard = document.getElementById('startCard');
+const startBtn = document.getElementById('startBtn');
+
+function renderQuestion(){
+  locked = false;
+  feedback.textContent = '';
+  feedback.className = 'feedback-line';
+  nextBtn.classList.add('hidden');
+
+  const item = deck[pos];
+  qText.textContent = item.num + ') ' + item.q;
+
+  qOptions.innerHTML = '';
+  item.options.forEach((opt, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.type = 'button';
+    btn.textContent = opt;
+    btn.addEventListener('click', ()=>handleAnswer(idx, btn));
+    qOptions.appendChild(btn);
+  });
+}
+
+function handleAnswer(idx, btn){
+  if(locked) return;
+  locked = true;
+  const item = deck[pos];
+  const allBtns = Array.from(qOptions.children);
+  allBtns.forEach(b=>b.disabled = true);
+
+  if(idx === item.correct){
+    btn.classList.add('correct');
+    feedback.textContent = 'Correto!';
+    feedback.classList.add('ok');
+  } else {
+    btn.classList.add('wrong');
+    allBtns[item.correct].classList.add('correct');
+    feedback.textContent = 'Incorreto. A resposta correta era:';
+    feedback.classList.add('err');
+  }
+
+  nextBtn.classList.remove('hidden');
+}
+
+function goNext(){
+  pos++;
+  if(pos >= deck.length){
+    showResult();
+  } else {
+    renderQuestion();
+  }
+}
+
+function showResult(){
+  quizCard.classList.add('hidden');
+  resultCard.classList.remove('hidden');
+}
+
+nextBtn.addEventListener('click', goNext);
+
+restartBtn.addEventListener('click', ()=>{
+  deck = buildDeck();
+  pos = 0;
+  resultCard.classList.add('hidden');
+  quizCard.classList.remove('hidden');
+  renderQuestion();
+});
+
+startBtn.addEventListener('click', ()=>{
+  startCard.classList.add('hidden');
+  quizCard.classList.remove('hidden');
+  renderQuestion();
+});
+</script>
+</body>
+</html>
